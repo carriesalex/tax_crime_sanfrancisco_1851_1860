@@ -1,4 +1,4 @@
-# Tax_Crime_SanFrancisco_1851_1860
+# tax_crime_sanfrancisco_1851_1860
 Taxes and Crime in San Francisco, 1851-1860
 
 This is the data and analysis for taxes and
