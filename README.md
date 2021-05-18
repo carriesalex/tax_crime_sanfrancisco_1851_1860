@@ -9,4 +9,4 @@ at the California State Library. This data and analysis supports my conclusions
 in my Ph.D. dissertation in History, completed in May of 2021, at the 
 University of California, Davis, entitled,
 "Buying Time: Negotiating Boundaries of Delay in Property, Taxation, 
-and Crime, 1850-1860."
+and Crime in California, 1850-1860."
