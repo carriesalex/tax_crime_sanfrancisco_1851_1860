@@ -1,0 +1,149 @@
+---
+title: "Taxes and Crime in San Francisco, 1851-1860 - Analysis"
+output: html_notebook
+---
+
+Anova from [datanovia](https://www.datanovia.com/en/lessons/anova-in-r/)
+
+Source `data.r` to create data frame.
+```{r}
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(ggplot2)
+library(ggthemes)
+source("data.r")
+```
+
+#Linear Model
+
+Build the data set, compute summary statistics, visualize key variables.
+```{r}
+#Create data frame
+stats <- tibble(date, month, year, arson, murder, suspicion_attempt_to_murder, manslaughter_homicide, 
+                grand_and_petit_larceny, grand_larceny, petit_larceny, pc_arrests, 
+                postponements, assessments, announcements, warnings, deadline, sale, 
+                lawsuits, licenses) %>% 
+                mutate(tax = postponements + assessments + announcements + warnings + deadline + 
+                         sale + lawsuits + licenses)
+
+#Summary statistics and visualizations
+summary(year)
+table(year)
+summary(pc_arrests)
+ggplot(stats, aes(x = pc_arrests)) + geom_density(color = "darkgray", size = 1) +
+   theme_stata() +
+                theme(axis.title.x = element_text(vjust=-1),
+                    axis.title.y = element_text(vjust=3),
+                    title = element_text(vjust=2))
+summary(stats$tax)
+ggplot(stats, aes(x = tax)) + geom_bar(fill = "darkgray") +
+  theme_stata() +
+                theme(axis.title.x = element_text(vjust=-1),
+                    axis.title.y = element_text(vjust=3),
+                    title = element_text(vjust=2)) +
+  scale_x_continuous(breaks = seq(0, 9, 3))
+
+linear_tax <- ggplot(stats, aes(x = tax, y = pc_arrests)) + geom_jitter() +
+  geom_smooth(method = "lm", color = "darkgray") +
+  stat_regline_equation(label.x = 2, label.y = 50) +
+  stat_cor(label.x = 5, label.y = 50) +
+  theme_stata() +
+                theme(axis.title.x = element_text(vjust=-1),
+                    axis.title.y = element_text(vjust=3),
+                    title = element_text(vjust=2)) +
+  scale_x_continuous(breaks = seq(0, 9, 3)) +
+  labs(x = "Tax Cycle", y = "Per Capita Arrests", title = "Per Capita Arrests and Tax Cycle" )
+
+linear_tax
+
+png(file="linear_tax.png",width=12,height=8,units="cm",res=300)
+linear_tax
+dev.off()
+
+  
+```
+
+Build and test linear model.
+```{r}
+#Correlation
+cor(stats$tax, stats$pc_arrests)
+
+#Check normality of dependent variable
+ggqqplot(stats$pc_arrests) +
+   theme_stata()
+shapiro_test(stats$pc_arrests)
+
+#Regression
+linear_model <- lm(pc_arrests ~ tax, data = stats)
+summary(linear_model)
+
+#QQ plot to test normality of residuals
+ggqqplot(residuals(linear_model)) +
+   theme_stata() 
+#Shapiro-Wilk test of normality of residuals
+shapiro_test(residuals(linear_model))
+
+#Plot residuals against fitted values to test homogeneity of variance
+ggplot(lm(pc_arrests ~ tax, data = stats)) +
+         geom_point(aes(x=.fitted, y=.resid)) +
+         geom_smooth(aes(x=.fitted, y=.resid),method = "loess", color = "darkgray", se = FALSE, span = .8) +
+         theme_stata() +
+         labs(x = "Fitted", y = "Residuals")
+
+```
+
+#Categorical Model
+Build the data set, compute summary statistics, visualize key variables.
+```{r}
+stats <- stats %>% filter(sunday_law_and_elections == 0) %>% mutate(stress = ifelse((sale > 0 & month == "April") | 
+                                           (warnings > 0 & month == "October") | 
+                                           (warnings > 0 & month == "December") |
+                                           licenses > 0 | lawsuits > 0, 5,
+                                    ifelse(month == "April" | month == "March" | sale > 0, 3,  
+                                    ifelse(postponements < 0, 1, 
+                                    ifelse(announcements > 0 | deadline > 0 | warnings > 0, 3, 1))))) %>%
+                  mutate(stress = factor(stress, labels = c("Low", "Medium", "High")))
+
+table(stats$stress)
+anova_tax <- ggplot(stats, aes(x = stress, y = pc_arrests)) + 
+              geom_boxplot() + aes(fill = stress) +
+              theme_stata() + scale_fill_economist() +
+              theme(axis.title.x = element_text(vjust=-3),
+                    axis.title.y = element_text(vjust=3),
+                    title = element_text(vjust=2),
+                    legend.title = element_blank(),
+                    legend.position = "bottom") +
+              labs(x = "Stress Level", y = "Per Capita Arrests", title = "Per Capita Arrests by Stress Level" )
+
+anova_tax
+
+png(file="anova_tax.png",width=12,height=8,units="cm",res=300)
+anova_tax
+dev.off()
+```
+Build and test categorical model
+```{r}
+#Test normality of pc_arrests within stress groups
+stats %>% group_by(stress) %>% shapiro_test(pc_arrests)
+ggqqplot(stats, "pc_arrests", facet.by = "stress") +
+     theme_stata()
+
+#Test homogeneity of variance across groups
+stats %>% levene_test(pc_arrests ~ stress)
+
+#ANOVA
+anova <- stats %>% anova_test(pc_arrests ~ stress)
+anova
+
+summary(anova)
+
+#ANOVA2
+one.way <- aov(pc_arrests ~ stress, stats)
+one.way
+
+summary(one.way)
+
+#Pairwise comparisons
+stats %>% tukey_hsd(aov(pc_arrests ~ stress, stats))
+```
