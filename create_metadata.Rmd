@@ -1,0 +1,59 @@
+---
+title: "Create_Metadata"
+author: "Carrie Alexander"
+date: "5/20/2021"
+output: html_document
+---
+```{r}
+getwd()
+setwd("/Users/csalexander/Dropbox/Carrie/criminal_statistics/new_work/final_version_for_review/files_final/files_final_2")
+
+```
+
+
+```{r}
+getwd()
+setwd("/Users/csalexander/Dropbox/Carrie/criminal_statistics/new_work/final_version_for_review/files_final/files_final_2")
+
+```
+
+```{r}
+tax_crime_sf_1851_1860_metadata <- read.csv(file = "/metadata_criminal_statistics_sanfrancisco_1851_1860.csv")
+
+```
+
+```{r}
+# Transpose everything other than the first column
+tax_crime_sf_1851_1860_metadata_transposed <- as.data.frame(as.matrix(t(tax_crime_sf_1851_1860_metadata)))
+
+```
+
+
+```{r}
+# keep the first column 
+names <-  tax_crime_sf_1851_1860_metadata[,1]
+
+# Transpose everything other than the first column
+tax_crime_sf_1851_1860_metadata_transposed <- as.data.frame(as.matrix(t(tax_crime_sf_1851_1860_metadata[,-1])))
+
+# Assign first column as the column names of the transposed dataframe
+colnames(tax_crime_sf_1851_1860_metadata_transposed) <- names
+
+tax_crime_sf_1851_1860_metadata_transposed$date <- rownames(tax_crime_sf_1851_1860_metadata_transposed)
+
+tax_crime_sf_1851_1860_metadata_transposed <- tax_crime_sf_1851_1860_metadata_transposed[,c(150,1:149)]
+
+rownames(tax_crime_sf_1851_1860_metadata_transposed)<-c(1:104)
+
+```
+
+
+```{r}
+citations <- tax_crime_sf_1851_1860_metadata_transposed[,c(1,134)]
+citations
+write.csv(citations, "tax_crime_citations.csv")
+
+```
+
+ 
+ 
