@@ -10,15 +10,8 @@ setwd("/Users/csalexander/Dropbox/Carrie/criminal_statistics/new_work/final_vers
 
 ```
 
-
 ```{r}
-getwd()
-setwd("/Users/csalexander/Dropbox/Carrie/criminal_statistics/new_work/final_version_for_review/files_final/files_final_2")
-
-```
-
-```{r}
-tax_crime_sf_1851_1860_metadata <- read.csv(file = "/metadata_criminal_statistics_sanfrancisco_1851_1860.csv")
+tax_crime_sf_1851_1860_metadata <- read.csv(file = "./metadata_criminal_statistics_sanfrancisco_1851_1860.csv")
 
 ```
 
